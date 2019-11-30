@@ -5,9 +5,6 @@ import time
 
 def highlight_shapes(img):
 
-	# Convert from BGR to RGB
-	# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
 	# Convert image to hsv and isolate ths saturation channel
 	hsv_shapes = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 	saturation = hsv_shapes[:, :, 1]
@@ -22,9 +19,22 @@ def get_polygon(contour):
 
 	perimeter = cv2.arcLength(contour,True)
 	epsilon = 0.03*cv2.arcLength(contour,True)
-	approx = cv2.approxPolyDP(contour,epsilon,True)
+	polygon = cv2.approxPolyDP(contour,epsilon,True)
 
-	return approx
+	# print(perimeter)
+
+	# find location
+	M = cv2.moments(polygon)
+
+	if(int(M["m00"] == 0)):
+		center = (0, 0)
+	else:
+		cX = int(M["m10"] / M["m00"])
+		cY = int(M["m01"] / M["m00"])
+
+		center = (cX, cY)
+
+	return (polygon, center)
 
 def detect_shapes(img, feedback = False):
 	output = []
@@ -40,6 +50,15 @@ def detect_shapes(img, feedback = False):
 		output.append(polygon)
 
 		if(feedback):
-			cv2.drawContours(img, [polygon], 0, (0, 255, 0), 3)
+			vertices, center = polygon
+			cX, cY = center
+
+			cv2.drawContours(img, [vertices], 0, (0, 255, 0), 3)
+			cv2.circle(img, (cX, cY), 7, (255, 255, 255), -1)
+			cv2.putText(img, "center", (cX - 20, cY - 20),
+				cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
 	return output
+
+
+
