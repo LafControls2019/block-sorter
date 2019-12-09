@@ -74,6 +74,6 @@ def draw_labels(img, polygons, labels):
 
 		cv2.circle(img, (x, y), 7, (255, 255, 255), -1)
 		cv2.putText(img, label, (x - 20, y- 20),
-			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
 

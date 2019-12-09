@@ -42,6 +42,26 @@ def crop_img(img, scale=1.0):
 	img_cropped = img[int(top_y):int(bottom_y), int(left_x):int(right_x)]
 	return img_cropped
 
+def sort(color):
+	if 0 <= color <= 12: 
+		return "white"
+
+	elif 12 <= color <= 50:
+		return "blue"
+
+	elif 50 <= color <= 80:
+		return "green"
+
+	elif 80 <= color <= 100:
+		return "yellow"
+
+	elif 100 <= color <= 115:
+		return "orange"
+
+	elif 115 <= color <= 150:
+		return "red"
+
+
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
 camera.exposure_mode="fixedfps"
@@ -57,14 +77,35 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 	# image = crop_img(frame.array, scale=1)
 
 	# shapes = detect.highlight_shapes(frame.array)
+
+	hsv_img = cv2.cvtColor(frame.array, cv2.COLOR_RGB2HSV)
+	hue = hsv_img[:,:,0]
+
 	shapes = detect.detect_shapes(frame.array, feedback=True)
 
 	detect.draw_polygons(frame.array, shapes)
-	detect.draw_labels(frame.array, shapes, ['label'])
+	# detect.draw_labels(frame.array, shapes, ['label'])
 	# blurred = cv2.GaussianBlur(image, (31,31), 0)
 
 	# image_gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
 	# image_lab = cv2.cvtColor(blurred, cv2.COLOR_BGR2LAB)
+
+	for shape in shapes:
+
+		vertices, _ = shape
+		print(vertices)
+
+		mask = np.zeros((480, 640), np.uint8)
+		cv2.fillPoly(mask, pts=[vertices], color=1)
+
+		color = cv2.bitwise_and(frame.array, frame.array, mask = mask) 
+		color_mean, _, _, _ = cv2.mean(hue, mask=mask)
+
+
+		detect.draw_labels(frame.array, [shape], [sort(color_mean)])
+
+		print(color_mean)
+
 
 	cv2.imshow("Image", frame.array)
 
