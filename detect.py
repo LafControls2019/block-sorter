@@ -3,17 +3,20 @@ import numpy as np
 
 import time
 
-def highlight_shapes(img):
+def highlight_shapes(img, threshold = 220, blur_radius = 3):
 
 	# Convert image to hsv and isolate ths saturation channel
 	hsv_shapes = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-	saturation = hsv_shapes[:, :, 1]
+	# saturation = hsv_shapes[:, :, 1]
+	value = hsv_shapes[:, :, 2]
 
-	saturation = cv2.blur(saturation, (3, 3), cv2.CV_8UC1)
+	# saturation = cv2.blur(saturation, (blur_radius, blur_radius), cv2.CV_8UC1)
+	value = cv2.blur(value, (blur_radius, blur_radius), cv2.CV_8UC1)
 
-	_, sat_threshold = cv2.threshold(saturation, 80, 255, cv2.THRESH_BINARY)
+	# _, sat_threshold = cv2.threshold(saturation, threshold, 255, cv2.THRESH_BINARY)
+	_, val_threshold = cv2.threshold(value, threshold, 255, cv2.THRESH_BINARY)
 
-	return sat_threshold
+	return val_threshold
 
 def get_polygon(contour):
 
@@ -36,7 +39,7 @@ def get_polygon(contour):
 
 	return (polygon, center)
 
-def detect_shapes(img, feedback = False):
+def detect_shapes(img, minimum_area=8000, feedback = False):
 	output = []
 
 	# Filter Image
@@ -46,19 +49,31 @@ def detect_shapes(img, feedback = False):
 	_, contours, _ = cv2.findContours(img_highlighted, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 	for contour in contours:
-		polygon = get_polygon(contour)
-		output.append(polygon)
 
-		if(feedback):
-			vertices, center = polygon
-			cX, cY = center
+		area = cv2.contourArea(contour)
 
-			cv2.drawContours(img, [vertices], 0, (0, 255, 0), 3)
-			cv2.circle(img, (cX, cY), 7, (255, 255, 255), -1)
-			cv2.putText(img, "center", (cX - 20, cY - 20),
-				cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+		if(area > minimum_area):
+			polygon = get_polygon(contour)
+			output.append(polygon)
 
 	return output
 
+def draw_polygons(img, polygons):
+	
+	for polygon in polygons:
+		vertices, center = polygon
+		cX, cY = center
+
+		cv2.drawContours(img, [vertices], 0, (0, 255, 0), 3)
+
+def draw_labels(img, polygons, labels):
+
+	for polygon, label in zip(polygons, labels):
+		_, center = polygon
+		x, y = center
+
+		cv2.circle(img, (x, y), 7, (255, 255, 255), -1)
+		cv2.putText(img, label, (x - 20, y- 20),
+			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
 
