@@ -6,9 +6,15 @@ import time
 def highlight_shapes(img, threshold = 220, blur_radius = 3):
 
 	# Convert image to hsv and isolate ths saturation channel
-	hsv_shapes = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+	hsv_img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 	# saturation = hsv_shapes[:, :, 1]
-	value = hsv_shapes[:, :, 2]
+	value = hsv_img[:, :, 2]
+	hue = hsv_img[:,:,0]
+
+	# hue_gradient = cv2.Laplacian(hue, cv2.CV_64F)
+	# hue_gradient = cv2.blur(hue_gradient, (3, 3), cv2.CV_64F)
+
+	# value = cv2.subtract(value, hue_gradient)
 
 	# saturation = cv2.blur(saturation, (blur_radius, blur_radius), cv2.CV_8UC1)
 	value = cv2.blur(value, (blur_radius, blur_radius), cv2.CV_8UC1)
@@ -39,7 +45,7 @@ def get_polygon(contour):
 
 	return (polygon, center)
 
-def detect_shapes(img, minimum_area=8000, feedback = False):
+def detect_shapes(img, minimum_area=7000, feedback = False):
 	output = []
 
 	# Filter Image
